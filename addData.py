@@ -1,5 +1,3 @@
-from yahoo_finance_api2 import share
-from datetime import datetime
 import pandas as pd
 
 stock = share.Share("TSLA")
