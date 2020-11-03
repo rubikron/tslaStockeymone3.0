@@ -11,39 +11,59 @@ tsladf = tsladf.drop(["unnamed"], axis = 1)
 
 # iterating through teslaDataset and comparing slope ratios with current ones
 #for testing purposes
-weekRatios = [-1.396, -0.033, -59.457]
-# input a dictionary with keys with "low" and "timestamp"
-def findSlope(someList,category):
-	slopeList = []
-	for x in range(len(someList[category])-1):
-		day1 = someList[category][x]
-		day2 = someList[category][x + 1]
-		slopeList.append(round(day2 - day1,2))
-	for w in range(len(someList["timestamp"])):
-		slopeList.append(someList["timestamp"][w])
-	return slopeList
-def findratios(listOfSlope):
-	lenOflistOfSlope = len(listOfSlope)
-	listOfRatios = []
-	validindexes = int(lenOflistOfSlope/2 - 0.5)
-	for q in range(validindexes-1):
-		listOfRatios.append(round((listOfSlope[q+1]/listOfSlope[q]),3))
-	return listOfRatios
+weekPercents = [[0.010469196510098401, '2010-11-04', '2010-11-05'], [-0.043938975190562404, '2010-11-05', '2010-11-08'], [0.011846701366300918, '2010-11-08', '2010-11-09'], [-0.0554730150481237, '2010-11-09', '2010-11-10']]
 
 
-# listOfDataRatiosLow = findratios(findSlope(tsladf,'low'))
-# listOfDataRatiosHigh = findratios(findSlope(tsladf,'high'))
-# listOfDataRatiosOpen = findratios(findSlope(tsladf,'open'))
-listOfDataRatiosClose = findSlope(tsladf,'close')	
-print(listOfDataRatiosClose)
+def findPercentChanges(df,category):
+	lenOflistOfSlope = len(df[category])
+	listOfPercents = []
+	for r in range(lenOflistOfSlope-1):
+		listOfPercents.append([(df[category][r+1] - df[category][r])/df[category][r],tsladf['timestamp'][r],tsladf['timestamp'][r+1]])
+	return listOfPercents
 
-
-# ratioDifList = []
-# for t in range(len(listOfDataRatiosClose-3)):
-# 	closePr1 = listOfDataRatiosClose[t]
-# 	closePr2 = listOfDataRatiosClose[t+1]
-# 	closePr3 = listOfDataRatiosClose[t+2]
-# 	ratioDifList.append()
+listOfDataPercentsClose = findPercentChanges(tsladf,'close')
+percentDifs = []
+for i in range(len(listOfDataPercentsClose)-2):
+	p1 = listOfDataPercentsClose[i][0]
+	p2 = listOfDataPercentsClose[i+1][0]
+	p3 = listOfDataPercentsClose[i+2][0]
 	
+	percentDifs.append([abs(weekPercents[0][0]-p1),abs(weekPercents[1][0]-p2),abs(weekPercents[2][0]-p3),listOfDataPercentsClose[i][1],listOfDataPercentsClose[i+2][2]])
+
+
+avgPercent = []
+for d in percentDifs:
+	avgPercent.append([(d[0] + d[1] + d[2])/3,d[-2],d[-1]])
+
+
+avgPercentFirst = []
+for e in range(len(avgPercent)):
+	avgPercentFirst.append(float(avgPercent[e][0]))
 	
-	
+someList = avgPercentFirst
+avgPercentFirst.sort()
+ 
+
+recentDates = []
+for x in avgPercent:
+	for t in range(7):
+
+		if avgPercentFirst[t] == x[0]:
+			recentDates.append(int(x[1][0:4]))
+			if int(x[1][0:4]) <= recentDates[-1]:
+				recentDates.pop(-1)
+				recentDates.append(x)
+recentDates.pop(0)
+priceDict = dict()
+priceDict["startPrice"] = 388.04
+priceDict["startDate"] = "2020-10-29"
+
+for i in recentDates:
+	startDate = i[2]
+	indexStartDate = list(tsladf['timestamp']).index(startDate)
+	priceDict[tsladf['timestamp'][indexStartDate]] = [tsladf["close"][indexStartDate],indexStartDate]
+	priceDict[tsladf['timestamp'][indexStartDate+1]] = [tsladf["close"][indexStartDate+1],indexStartDate + 1]
+	priceDict[tsladf['timestamp'][indexStartDate+2]] = [tsladf["close"][indexStartDate+2],indexStartDate + 2]
+
+
+
